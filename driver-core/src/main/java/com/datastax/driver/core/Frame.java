@@ -130,7 +130,8 @@ class Frame {
         final int opcode;
 
         private Header(ProtocolVersion version, int flags, int streamId, int opcode) {
-            this(version, Flag.deserialize(flags), streamId, opcode);
+            this(version, Flag.deserialize(flags, version), streamId, opcode);
+
         }
 
         private Header(ProtocolVersion version, EnumSet<Flag> flags, int streamId, int opcode) {
@@ -165,11 +166,14 @@ class Frame {
             COMPRESSED,
             TRACING,
             CUSTOM_PAYLOAD,
-            WARNING;
+            WARNING,
+            USE_BETA;
 
-            static EnumSet<Flag> deserialize(int flags) {
+            private static Flag[] VALUES_PRE_V5 = new Flag[] { COMPRESSED, TRACING, CUSTOM_PAYLOAD, WARNING };
+
+            static EnumSet<Flag> deserialize(int flags, ProtocolVersion protocolVersion) {
                 EnumSet<Flag> set = EnumSet.noneOf(Flag.class);
-                Flag[] values = Flag.values();
+                Flag[] values = protocolVersion.equals(ProtocolVersion.V5) ? Flag.values() : VALUES_PRE_V5;
                 for (int n = 0; n < 8; n++) {
                     if ((flags & (1 << n)) != 0)
                         set.add(values[n]);
@@ -177,7 +181,10 @@ class Frame {
                 return set;
             }
 
-            static int serialize(EnumSet<Flag> flags) {
+            static int serialize(EnumSet<Flag> flags, ProtocolVersion protocolVersion) {
+                if (protocolVersion.toInt() < ProtocolVersion.V5.toInt() && flags.contains(USE_BETA))
+                    throw new UnsupportedOperationException(String.format("USE_BETA flag is not supported for the protocol version %s", protocolVersion));
+
                 int i = 0;
                 for (Flag flag : flags)
                     i |= 1 << flag.ordinal();
@@ -253,7 +260,7 @@ class Frame {
             ByteBuf header = ctx.alloc().ioBuffer(Frame.Header.lengthFor(protocolVersion));
             // We don't bother with the direction, we only send requests.
             header.writeByte(frame.header.version.toInt());
-            header.writeByte(Header.Flag.serialize(frame.header.flags));
+            header.writeByte(Header.Flag.serialize(frame.header.flags, protocolVersion));
             writeStreamId(frame.header.streamId, header, protocolVersion);
             header.writeByte(frame.header.opcode);
             header.writeInt(frame.body.readableBytes());

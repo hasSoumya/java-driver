@@ -30,19 +30,24 @@ public enum ProtocolVersion {
     V2("2.0.0", 2),
     V3("2.1.0", 3),
     V4("2.2.0", 4),
-    V5("2.2.0", 5);
+    V5("3.0.0", 5, true);
 
     /**
      * The most recent protocol version supported by the driver.
      */
-    public static final ProtocolVersion NEWEST_SUPPORTED = V5;
+    public static final ProtocolVersion NEWEST_SUPPORTED = V4;
 
     private final VersionNumber minCassandraVersion;
     private final int asInt;
+    private final boolean inBeta;
 
     private ProtocolVersion(String minCassandraVersion, int asInt) {
+        this(minCassandraVersion, asInt, false);
+    }
+    private ProtocolVersion(String minCassandraVersion, int asInt, boolean inBeta) {
         this.minCassandraVersion = VersionNumber.parse(minCassandraVersion);
         this.asInt = asInt;
+        this.inBeta = inBeta;
     }
 
     boolean isSupportedBy(Host host) {
@@ -69,6 +74,11 @@ public enum ProtocolVersion {
      */
     public int toInt() {
         return asInt;
+    }
+
+    public boolean isInBeta()
+    {
+        return inBeta;
     }
 
     private static final Map<Integer, ProtocolVersion> INT_TO_VERSION;

@@ -808,7 +808,26 @@ public class Cluster implements Closeable {
          * @return this Builder.
          */
         public Builder withProtocolVersion(ProtocolVersion version) {
+            return withProtocolVersion(version, false);
+        }
+
+        /**
+         * Like {@code withProtocolVersion}, but with an ability to provide a {@param useBetaVersion}
+         * flag to specify that client opts in to use the version even if it is in beta on the server.
+         *
+         * @param version the native protocol version to use. {@code null} is also supported
+         *                to trigger auto-detection (see above) but this is the default (so you don't have
+         *                to call this method for that behavior).
+         * @param useBetaVersion {@code true} to opt in to use the version even if it is in beta on server,
+         *                       {@code false} otherwise.
+         * @return this Builder
+         */
+        public Builder withProtocolVersion(ProtocolVersion version, boolean useBetaVersion) {
             this.protocolVersion = version;
+
+            if (protocolVersion.isInBeta() && !useBetaVersion)
+                throw new IllegalArgumentException(String.format("Protocol {} is in beta, set useBetaVersion to true if you want to use it", protocolVersion));
+
             return this;
         }
 
