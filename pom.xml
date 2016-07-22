@@ -148,7 +148,7 @@
                             <!-- This requires includes to be explicitly specified by implementing classes.
                                  This is needed to prevent creating a JVM fork for each test, even those that don't
                                  have the isolated group. -->
-                            <includes />
+                            <includes/>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -319,6 +319,8 @@
                     </includes>
                     <excludes>
                         <exclude>**/src/main/config/ide/**</exclude>
+                        <exclude>**/com/datastax/driver/core/utils/LongAdder.java</exclude>
+                        <exclude>**/com/datastax/driver/core/utils/Striped64.java</exclude>
                     </excludes>
                     <mapping>
                         <java>SLASHSTAR_STYLE</java>
@@ -351,6 +353,9 @@
                         <artifactId>java16</artifactId>
                         <version>1.0</version>
                     </signature>
+                    <ignores>
+                        <ignore>sun.misc.Unsafe</ignore>
+                    </ignores>
                 </configuration>
                 <executions>
                     <execution>
